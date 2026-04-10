@@ -58,20 +58,27 @@ const Navbar1 = () => {
           ))}
         </nav>
 
-        {/* Desktop CTA */}
+        {/* Desktop CTAs */}
         <motion.div
-          className="hidden md:block"
+          className="hidden md:flex items-center gap-3"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
-          whileHover={{ scale: 1.05 }}
         >
           <Link
-            href="/chat"
-            className="inline-flex items-center justify-center px-5 py-2 text-sm text-black bg-white rounded-full hover:bg-gray-100 transition-colors font-medium"
+            href="/auth"
+            className="inline-flex items-center justify-center px-5 py-2 text-sm text-gray-300 hover:text-white border border-white/15 rounded-full hover:border-white/30 transition-colors font-medium"
           >
-            Get Started
+            Sign in
           </Link>
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Link
+              href="/chat"
+              className="inline-flex items-center justify-center px-5 py-2 text-sm text-black bg-white rounded-full hover:bg-gray-100 transition-colors font-medium"
+            >
+              Get Started
+            </Link>
+          </motion.div>
         </motion.div>
 
         {/* Mobile Menu Button */}
@@ -124,8 +131,15 @@ const Navbar1 = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="pt-6"
+                className="pt-6 flex flex-col gap-3"
               >
+                <Link
+                  href="/auth"
+                  className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-gray-300 border border-white/15 rounded-full hover:border-white/30 transition-colors font-medium"
+                  onClick={toggleMenu}
+                >
+                  Sign in
+                </Link>
                 <Link
                   href="/chat"
                   className="inline-flex items-center justify-center w-full px-5 py-3 text-base text-black bg-white rounded-full hover:bg-gray-100 transition-colors font-medium"

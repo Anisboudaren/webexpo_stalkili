@@ -221,14 +221,7 @@ function ChatContent() {
       {/* Messages */}
       <div className="relative z-10 flex-1 overflow-y-auto pt-6 pb-4">
         <div className="max-w-3xl w-full mx-auto px-4">
-          {isEmpty ? (
-            <div className="flex flex-col items-center justify-center gap-4 min-h-[60vh]">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-white mb-3">What do you want to know?</h1>
-                <p className="text-gray-500 text-base max-w-md">Search a supervisor, research a recruiter, or prep for a cold call.</p>
-              </div>
-            </div>
-          ) : (
+          {isEmpty ? null : (
             <div className="flex flex-col gap-6 py-6">
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -377,7 +370,7 @@ function ChatContent() {
           </AnimatePresence>
         </div>
 
-        <p className="text-center text-xs text-gray-800 mt-3">
+        <p className="text-center text-xs text-black mt-3">
           Scopeout uses AI to surface public information. Always verify before acting.
         </p>
       </div>

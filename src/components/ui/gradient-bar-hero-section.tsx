@@ -208,18 +208,18 @@ export const Component: React.FC = () => {
           <TrustElements />
         </div>
         <h1 className="w-full text-white leading-tight tracking-tight mb-6 sm:mb-8 px-4">
-          <span className="block font-medium text-[clamp(1.5rem,6vw,3.75rem)] whitespace-nowrap">
+          <span className="block font-medium text-[clamp(1.25rem,4.5vw,2.75rem)] whitespace-nowrap">
             Know who you're walking
           </span>
-          <span className="block italic text-[clamp(1.5rem,6vw,3.75rem)] whitespace-nowrap">
+          <span className="block italic text-[clamp(1.25rem,4.5vw,2.75rem)] whitespace-nowrap">
             into a room with.
           </span>
         </h1>
         <div className="mb-6 sm:mb-10 px-4">
-          <p className="text-[clamp(1rem,3vw,1.5rem)] text-gray-400 leading-relaxed">
+          <p className="text-[clamp(0.875rem,2vw,1.125rem)] text-gray-400 leading-relaxed">
             AI-powered research briefs for any high-stakes interaction.
           </p>
-          <p className="text-[clamp(1rem,3vw,1.5rem)] text-gray-400 leading-relaxed">
+          <p className="text-[clamp(0.875rem,2vw,1.125rem)] text-gray-400 leading-relaxed">
             Find your perfect PhD supervisor — ranked, explained, actionable.
           </p>
         </div>
