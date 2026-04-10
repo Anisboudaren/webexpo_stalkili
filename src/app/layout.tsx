@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { FloatingAiAssistant } from "@/components/ui/glowing-ai-chat-assistant";
-import { Navbar1 } from "@/components/ui/navbar-1";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -30,7 +29,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar1 />
         {children}
         <FloatingAiAssistant />
       </body>

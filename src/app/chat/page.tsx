@@ -7,6 +7,7 @@ import { Layers, X, Check, Database } from 'lucide-react';
 import { PromptInputBox } from '@/components/ui/ai-prompt-box';
 import { SelectorChips } from '@/components/ui/selector-chips';
 import { ResearcherResults } from '@/components/ui/researcher-card';
+import { SiriOrb } from '@/components/ui/siri-orb';
 
 type Message = { role: 'user' | 'ai'; text: string; query?: string };
 
@@ -202,17 +203,25 @@ function ChatContent() {
         className="absolute inset-0 hidden sm:block"
         style={{ background: 'radial-gradient(125% 125% at 50% 101%, rgba(245,87,2,1) 0%, rgba(245,87,2,0.8) 8%, rgba(120,40,0,0.6) 18%, rgba(30,10,0,0.9) 32%, rgba(0,0,0,1) 55%)' }}
       />
+      {/* Top bar */}
+      <div className="relative z-20 shrink-0 flex items-center justify-center px-5 py-3 border-b border-white/5 bg-black/30 backdrop-blur-xl">
+        <button
+          onClick={() => router.push('/')}
+          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+        >
+          <SiriOrb
+            size={28}
+            animationDuration={16}
+            colors={{ c1: 'oklch(72% 0.22 35)', c2: 'oklch(62% 0.16 45)', c3: 'oklch(48% 0.04 0)' }}
+          />
+          <span className="text-white font-semibold tracking-wide text-sm">Veritas</span>
+        </button>
+      </div>
+
       {/* Messages */}
-      <div className="relative z-10 flex-1 overflow-y-auto pt-28 pb-4">
+      <div className="relative z-10 flex-1 overflow-y-auto pt-6 pb-4">
         <div className="max-w-3xl w-full mx-auto px-4">
-          {isEmpty ? (
-            <div className="flex flex-col items-center justify-center gap-4 min-h-[60vh]">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-white mb-3">What do you want to know?</h1>
-                <p className="text-gray-500 text-base max-w-md">Search a supervisor, research a recruiter, or prep for a cold call.</p>
-              </div>
-            </div>
-          ) : (
+          {isEmpty ? null : (
             <div className="flex flex-col gap-6 py-6">
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -361,7 +370,7 @@ function ChatContent() {
           </AnimatePresence>
         </div>
 
-        <p className="text-center text-xs text-gray-800 mt-3">
+        <p className="text-center text-xs text-black mt-3">
           Scopeout uses AI to surface public information. Always verify before acting.
         </p>
       </div>
