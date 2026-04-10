@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from 'react';
 import { Globe, Mail, X, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SelectorChips } from '@/components/ui/selector-chips';
 
@@ -227,13 +226,6 @@ export const Component: React.FC = () => {
         <div className="w-full max-w-2xl mb-6 sm:mb-8 px-4">
           <SupervisorSearch />
         </div>
-        <Link
-          href="/chat"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-full px-5 py-2.5 transition-all duration-300 hover:bg-white/5"
-        >
-          <span className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
-          Ask our AI assistant
-        </Link>
         <div className="flex justify-center space-x-6">
           <a href="#" className="text-gray-500 hover:text-gray-300 transition-colors duration-300"><Globe size={20} /></a>
           <a href="#" className="text-gray-500 hover:text-gray-300 transition-colors duration-300"><Mail size={20} /></a>
