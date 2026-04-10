@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Globe, Mail, X } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import React, { useState } from "react";
+import { Globe, Mail, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type AvatarProps = { imageSrc: string; delay: number };
 
@@ -12,7 +12,11 @@ const Avatar: React.FC<AvatarProps> = ({ imageSrc, delay }) => (
     className="relative h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 rounded-full overflow-hidden border-2 border-gray-700 shadow-lg animate-fadeIn"
     style={{ animationDelay: `${delay}ms` }}
   >
-    <img src={imageSrc} alt="User avatar" className="h-full w-full object-cover" />
+    <img
+      src={imageSrc}
+      alt="User avatar"
+      className="h-full w-full object-cover"
+    />
     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
   </div>
 );
@@ -31,21 +35,25 @@ const TrustElements: React.FC = () => {
           <Avatar key={index} imageSrc={avatar} delay={index * 200} />
         ))}
       </div>
-      <p className="text-white whitespace-nowrap" style={{ animationDelay: '800ms' }}>
-        <span className="text-white font-semibold">2.4K</span> researchers already matched
+      <p
+        className="text-white whitespace-nowrap"
+        style={{ animationDelay: "800ms" }}
+      >
+        <span className="text-white font-semibold">2.4K</span> researchers
+        already matched
       </p>
     </div>
   );
 };
 
 const SupervisorSearch: React.FC = () => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!query.trim()) return;
-    router.push(`/chat?q=${encodeURIComponent(query.trim())}`);
+    router.push(`/results?q=${encodeURIComponent(query.trim())}`);
   };
 
   return (
@@ -89,10 +97,10 @@ const GradientBars: React.FC = () => {
       <div
         className="flex h-full"
         style={{
-          width: '100%',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
-          WebkitFontSmoothing: 'antialiased',
+          width: "100%",
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          WebkitFontSmoothing: "antialiased",
         }}
       >
         {Array.from({ length: numBars }).map((_, index) => {
@@ -101,14 +109,15 @@ const GradientBars: React.FC = () => {
             <div
               key={index}
               style={{
-                flex: '1 0 calc(100% / 15)',
-                maxWidth: 'calc(100% / 15)',
-                height: '100%',
-                background: 'linear-gradient(to top, rgb(255, 60, 0), transparent)',
+                flex: "1 0 calc(100% / 15)",
+                maxWidth: "calc(100% / 15)",
+                height: "100%",
+                background:
+                  "linear-gradient(to top, rgb(255, 60, 0), transparent)",
                 transform: `scaleY(${height / 100})`,
-                transformOrigin: 'bottom',
-                outline: '1px solid rgba(0, 0, 0, 0)',
-                boxSizing: 'border-box',
+                transformOrigin: "bottom",
+                outline: "1px solid rgba(0, 0, 0, 0)",
+                boxSizing: "border-box",
               }}
             />
           );
@@ -117,7 +126,6 @@ const GradientBars: React.FC = () => {
     </div>
   );
 };
-
 
 export const Component: React.FC = () => {
   return (
@@ -155,9 +163,24 @@ export const Component: React.FC = () => {
           Ask our AI assistant
         </Link>
         <div className="flex justify-center space-x-6">
-          <a href="#" className="text-gray-500 hover:text-gray-300 transition-colors duration-300"><Globe size={20} /></a>
-          <a href="#" className="text-gray-500 hover:text-gray-300 transition-colors duration-300"><Mail size={20} /></a>
-          <a href="#" className="text-gray-500 hover:text-gray-300 transition-colors duration-300"><X size={20} /></a>
+          <a
+            href="#"
+            className="text-gray-500 hover:text-gray-300 transition-colors duration-300"
+          >
+            <Globe size={20} />
+          </a>
+          <a
+            href="#"
+            className="text-gray-500 hover:text-gray-300 transition-colors duration-300"
+          >
+            <Mail size={20} />
+          </a>
+          <a
+            href="#"
+            className="text-gray-500 hover:text-gray-300 transition-colors duration-300"
+          >
+            <X size={20} />
+          </a>
         </div>
       </div>
     </section>
