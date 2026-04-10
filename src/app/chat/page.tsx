@@ -203,7 +203,7 @@ function ChatContent() {
         style={{ background: 'radial-gradient(125% 125% at 50% 101%, rgba(245,87,2,1) 0%, rgba(245,87,2,0.8) 8%, rgba(120,40,0,0.6) 18%, rgba(30,10,0,0.9) 32%, rgba(0,0,0,1) 55%)' }}
       />
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto pt-28 pb-4">
+      <div className="relative z-10 flex-1 overflow-y-auto pt-28 pb-4">
         <div className="max-w-3xl w-full mx-auto px-4">
           {isEmpty ? (
             <div className="flex flex-col items-center justify-center gap-4 min-h-[60vh]">
@@ -241,7 +241,7 @@ function ChatContent() {
       </div>
 
       {/* Input area — pinned to bottom */}
-      <div className="shrink-0 max-w-3xl w-full mx-auto px-4 pb-5">
+      <div className="relative z-10 shrink-0 max-w-3xl w-full mx-auto px-4 pb-5">
 
         {/* Field picker popover anchor */}
         <div ref={pickerRef} className="relative">
