@@ -219,3 +219,104 @@ git checkout .
 ---
 
 Built with [Claude Code](https://claude.ai/download) at a [BetterFit](https://betterfit.tech) workshop.
+
+## Scholar Search API
+
+A server-only endpoint is available at `GET /api/search` to query Google Scholar data via SerpAPI.
+
+### Environment
+
+Add this to your `.env`:
+
+```bash
+SERPAPI_API_KEY=your_serpapi_key
+```
+
+### Request
+
+```bash
+curl -sS "http://localhost:3000/api/search?q=zakaria"
+```
+
+### Success Response (200)
+
+```json
+{
+  "query": "zakaria",
+  "authors": [
+    {
+      "name": "Author Name",
+      "profileUrl": "https://scholar.google.com/...",
+      "affiliations": "University Name",
+      "citedBy": 1234,
+      "thumbnail": "https://...",
+      "authorId": "abc123"
+    }
+  ],
+  "meta": {
+    "source": "serpapi",
+    "total": 1
+  }
+}
+```
+
+### Error Responses
+
+- `400` - missing/blank `q` (`code: "MISSING_QUERY"`)
+- `500` - missing `SERPAPI_API_KEY` (`code: "MISSING_API_KEY"`)
+- `502` - upstream request/status/payload issues (`code: "UPSTREAM_*"`)
+- `504` - SerpAPI timeout (`code: "UPSTREAM_TIMEOUT"`)
+
+## Advisor Fit API
+
+Use this endpoint to evaluate a selected advisor with papers, inferred fields, and an explainable fit score.
+
+Simple scoring explanation: see `docs/ADVISOR_FIT_SCORING.md`.
+
+### Endpoint
+
+`POST /api/advisor-fit`
+
+### Request Body
+
+```json
+{
+  "authorId": "exampleAuthorId",
+  "studentInterests": ["machine learning", "data science"],
+  "targetYearRange": {
+    "from": 2020,
+    "to": 2026
+  }
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "authorId": "exampleAuthorId",
+  "studentInterests": ["machine learning"],
+  "papers": [],
+  "researchFields": [],
+  "fit": {
+    "fitScore": 0,
+    "fitLevel": "low",
+    "scoreBreakdown": [],
+    "pros": [],
+    "risks": [],
+    "nextQuestions": []
+  },
+  "meta": {
+    "source": "serpapi",
+    "totalPapers": 0
+  }
+}
+```
+
+### Advisor-Fit Errors
+
+- `400` - invalid body or missing `authorId` (`code: "INVALID_BODY"` or `"MISSING_AUTHOR_ID"`)
+- `404` - no paper evidence (`code: "NO_PAPERS_FOUND"`)
+- `500` - missing API key or internal issue
+- `502` - upstream malformed response/status issues
+- `504` - upstream timeout
