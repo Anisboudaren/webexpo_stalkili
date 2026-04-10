@@ -1,15 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, ArrowLeft } from 'lucide-react';
-import TeacherCard, { type Teacher } from '@/components/TeacherCard';
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Search, ArrowLeft } from "lucide-react";
+import TeacherCard, { type Teacher } from "@/components/TeacherCard";
 
 function ResultsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-
-  const query = searchParams?.get('q') ?? '';
+  const query = searchParams?.get("q") ?? "";
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,11 +23,11 @@ function ResultsContent() {
 
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-        if (!res.ok) throw new Error('Failed to fetch results');
+        if (!res.ok) throw new Error("Failed to fetch results");
         const data = await res.json();
         setTeachers(data.results);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        setError(err instanceof Error ? err.message : "Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -48,14 +47,14 @@ function ResultsContent() {
       className="min-h-screen"
       style={{
         background:
-          'radial-gradient(125% 125% at 50% 0%, rgba(0,0,0,1) 40%, rgba(30,10,0,0.95) 70%, rgba(120,40,0,0.3) 90%, rgba(245,87,2,0.15) 100%)',
+          "radial-gradient(125% 125% at 50% 0%, rgba(0,0,0,1) 40%, rgba(30,10,0,0.95) 70%, rgba(120,40,0,0.3) 90%, rgba(245,87,2,0.15) 100%)",
       }}
     >
       {/* Header with search */}
       <div className="sticky top-0 z-20 backdrop-blur-xl bg-black/60 border-b border-white/5">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push("/")}
             className="shrink-0 p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <ArrowLeft size={20} />
@@ -90,12 +89,14 @@ function ResultsContent() {
         {/* Results count */}
         {!loading && !error && (
           <p className="text-sm text-gray-500 mb-6">
-            {teachers.length} result{teachers.length !== 1 ? 's' : ''}
+            {teachers.length} result{teachers.length !== 1 ? "s" : ""}
             {query && (
               <>
-                {' '}
-                for{' '}
-                <span className="text-gray-300 font-medium">&ldquo;{query}&rdquo;</span>
+                {" "}
+                for{" "}
+                <span className="text-gray-300 font-medium">
+                  &ldquo;{query}&rdquo;
+                </span>
               </>
             )}
           </p>
@@ -128,7 +129,9 @@ function ResultsContent() {
         {/* Error */}
         {error && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="text-red-400 text-lg font-medium mb-2">Something went wrong</div>
+            <div className="text-red-400 text-lg font-medium mb-2">
+              Something went wrong
+            </div>
             <p className="text-gray-500 text-sm mb-6">{error}</p>
             <button
               onClick={() => window.location.reload()}
@@ -142,12 +145,15 @@ function ResultsContent() {
         {/* Empty state */}
         {!loading && !error && teachers.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="text-gray-300 text-lg font-medium mb-2">No teachers found</div>
+            <div className="text-gray-300 text-lg font-medium mb-2">
+              No teachers found
+            </div>
             <p className="text-gray-500 text-sm mb-6">
-              Try a different search term like &ldquo;machine learning&rdquo; or &ldquo;neuroscience&rdquo;
+              Try a different search term like &ldquo;machine learning&rdquo; or
+              &ldquo;neuroscience&rdquo;
             </p>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="px-5 py-2.5 rounded-full bg-white/10 text-white text-sm hover:bg-white/15 transition-colors"
             >
               Back to home
