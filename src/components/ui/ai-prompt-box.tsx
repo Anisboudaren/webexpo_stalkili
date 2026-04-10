@@ -3,8 +3,8 @@
 import React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowUp, Paperclip, Square, X, StopCircle, Mic, Globe, BrainCog, FolderCode } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUp, Square, X, StopCircle, Mic } from "lucide-react";
+import { motion } from "framer-motion";
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(" ");
 
@@ -237,7 +237,7 @@ const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
     return (
       <TooltipProvider>
         <PromptInputContext.Provider value={{ isLoading, value: value ?? internalValue, setValue: onValueChange ?? handleChange, maxHeight, onSubmit, disabled }}>
-          <div ref={ref} className={cn("rounded-3xl border border-[#444444] bg-[#1F2023] p-2 shadow-[0_8px_30px_rgba(0,0,0,0.24)] transition-all duration-300", isLoading && "border-red-500/70", className)} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+          <div ref={ref} className={cn("rounded-3xl border border-white/10 bg-black/95 backdrop-blur-2xl p-2 shadow-[0_8px_30px_rgba(0,0,0,0.24)] transition-all duration-300", isLoading && "border-red-500/70", className)} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
             {children}
           </div>
         </PromptInputContext.Provider>
@@ -268,7 +268,7 @@ const PromptInputActions: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ ch
 );
 
 interface PromptInputActionProps extends React.ComponentProps<typeof Tooltip> {
-  tooltip: React.ReactNode; children: React.ReactNode; side?: "top" | "bottom" | "left" | "right";
+  tooltip: React.ReactNode; children: React.ReactNode; side?: "top" | "bottom" | "left" | "right"; className?: string;
 }
 const PromptInputAction: React.FC<PromptInputActionProps> = ({ tooltip, children, className, side = "top", ...props }) => {
   const { disabled } = usePromptInput();
@@ -279,12 +279,6 @@ const PromptInputAction: React.FC<PromptInputActionProps> = ({ tooltip, children
     </Tooltip>
   );
 };
-
-const CustomDivider: React.FC = () => (
-  <div className="relative h-6 w-[1.5px] mx-1">
-    <div className="absolute inset-0 bg-linear-to-t from-transparent via-[#9b87f5]/70 to-transparent rounded-full" />
-  </div>
-);
 
 // Main PromptInputBox Component
 interface PromptInputBoxProps {
@@ -300,16 +294,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
   const [filePreviews, setFilePreviews] = React.useState<{ [key: string]: string }>({});
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [isRecording, setIsRecording] = React.useState(false);
-  const [showSearch, setShowSearch] = React.useState(false);
-  const [showThink, setShowThink] = React.useState(false);
-  const [showCanvas, setShowCanvas] = React.useState(false);
-  const uploadInputRef = React.useRef<HTMLInputElement>(null);
   const promptBoxRef = React.useRef<HTMLDivElement>(null);
-
-  const handleToggleChange = (value: string) => {
-    if (value === "search") { setShowSearch((p) => !p); setShowThink(false); }
-    else if (value === "think") { setShowThink((p) => !p); setShowSearch(false); }
-  };
 
   const isImageFile = (file: File) => file.type.startsWith("image/");
 
@@ -354,11 +339,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
 
   const handleSubmit = () => {
     if (input.trim() || files.length > 0) {
-      let prefix = "";
-      if (showSearch) prefix = "[Search: ";
-      else if (showThink) prefix = "[Think: ";
-      else if (showCanvas) prefix = "[Canvas: ";
-      onSend(prefix ? `${prefix}${input}]` : input, files);
+      onSend(input, files);
       setInput(""); setFiles([]); setFilePreviews({});
     }
   };
@@ -374,7 +355,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
     <>
       <PromptInput
         value={input} onValueChange={setInput} isLoading={isLoading} onSubmit={handleSubmit}
-        className={cn("w-full bg-[#1F2023] border-[#444444] shadow-[0_8px_30px_rgba(0,0,0,0.24)]", isRecording && "border-red-500/70", className)}
+        className={cn("w-full bg-black/95 backdrop-blur-2xl border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.24)]", isRecording && "border-red-500/70", className)}
         disabled={isLoading || isRecording} ref={ref || promptBoxRef}
         onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
       >
@@ -397,7 +378,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
 
         <div className={cn("transition-all duration-300", isRecording ? "h-0 overflow-hidden opacity-0" : "opacity-100")}>
           <PromptInputTextarea
-            placeholder={showSearch ? "Search the web..." : showThink ? "Think deeply..." : showCanvas ? "Create on canvas..." : placeholder}
+            placeholder={placeholder}
             className="text-base"
           />
         </div>
@@ -406,64 +387,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
           <VoiceRecorder isRecording={isRecording} onStartRecording={() => {}} onStopRecording={handleStopRecording} />
         )}
 
-        <PromptInputActions className="flex items-center justify-between gap-2 p-0 pt-2">
-          <div className={cn("flex items-center gap-1 transition-opacity duration-300", isRecording ? "opacity-0 invisible h-0" : "opacity-100 visible")}>
-            <PromptInputAction tooltip="Upload image">
-              <button onClick={() => uploadInputRef.current?.click()} className="flex h-8 w-8 text-[#9CA3AF] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-600/30 hover:text-[#D1D5DB]" disabled={isRecording}>
-                <Paperclip className="h-5 w-5" />
-                <input ref={uploadInputRef} type="file" className="hidden" onChange={(e) => { if (e.target.files?.[0]) processFile(e.target.files[0]); if (e.target) e.target.value = ""; }} accept="image/*" />
-              </button>
-            </PromptInputAction>
-
-            <div className="flex items-center">
-              {/* Search toggle */}
-              <button type="button" onClick={() => handleToggleChange("search")} className={cn("rounded-full transition-all flex items-center gap-1 px-2 py-1 border h-8", showSearch ? "bg-[#1EAEDB]/15 border-[#1EAEDB] text-[#1EAEDB]" : "bg-transparent border-transparent text-[#9CA3AF] hover:text-[#D1D5DB]")}>
-                <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                  <motion.div animate={{ rotate: showSearch ? 360 : 0, scale: showSearch ? 1.1 : 1 }} transition={{ type: "spring", stiffness: 260, damping: 25 }}>
-                    <Globe className={cn("w-4 h-4", showSearch ? "text-[#1EAEDB]" : "text-inherit")} />
-                  </motion.div>
-                </div>
-                <AnimatePresence>
-                  {showSearch && (
-                    <motion.span initial={{ width: 0, opacity: 0 }} animate={{ width: "auto", opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="text-xs overflow-hidden whitespace-nowrap text-[#1EAEDB] flex-shrink-0">Search</motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-
-              <CustomDivider />
-
-              {/* Think toggle */}
-              <button type="button" onClick={() => handleToggleChange("think")} className={cn("rounded-full transition-all flex items-center gap-1 px-2 py-1 border h-8", showThink ? "bg-[#8B5CF6]/15 border-[#8B5CF6] text-[#8B5CF6]" : "bg-transparent border-transparent text-[#9CA3AF] hover:text-[#D1D5DB]")}>
-                <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                  <motion.div animate={{ rotate: showThink ? 360 : 0, scale: showThink ? 1.1 : 1 }} transition={{ type: "spring", stiffness: 260, damping: 25 }}>
-                    <BrainCog className={cn("w-4 h-4", showThink ? "text-[#8B5CF6]" : "text-inherit")} />
-                  </motion.div>
-                </div>
-                <AnimatePresence>
-                  {showThink && (
-                    <motion.span initial={{ width: 0, opacity: 0 }} animate={{ width: "auto", opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="text-xs overflow-hidden whitespace-nowrap text-[#8B5CF6] flex-shrink-0">Think</motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-
-              <CustomDivider />
-
-              {/* Canvas toggle */}
-              <button type="button" onClick={() => setShowCanvas((p) => !p)} className={cn("rounded-full transition-all flex items-center gap-1 px-2 py-1 border h-8", showCanvas ? "bg-[#F97316]/15 border-[#F97316] text-[#F97316]" : "bg-transparent border-transparent text-[#9CA3AF] hover:text-[#D1D5DB]")}>
-                <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                  <motion.div animate={{ rotate: showCanvas ? 360 : 0, scale: showCanvas ? 1.1 : 1 }} transition={{ type: "spring", stiffness: 260, damping: 25 }}>
-                    <FolderCode className={cn("w-4 h-4", showCanvas ? "text-[#F97316]" : "text-inherit")} />
-                  </motion.div>
-                </div>
-                <AnimatePresence>
-                  {showCanvas && (
-                    <motion.span initial={{ width: 0, opacity: 0 }} animate={{ width: "auto", opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="text-xs overflow-hidden whitespace-nowrap text-[#F97316] flex-shrink-0">Canvas</motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-            </div>
-          </div>
-
+        <PromptInputActions className="flex items-center justify-end gap-2 p-0 pt-2">
           <PromptInputAction tooltip={isLoading ? "Stop generation" : isRecording ? "Stop recording" : hasContent ? "Send message" : "Voice message"}>
             <Button
               variant="default" size="icon"

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { SiriOrb } from './siri-orb';
 
 const FloatingAiAssistant = () => {
   const pathname = usePathname();
@@ -17,12 +16,9 @@ const FloatingAiAssistant = () => {
         onClick={() => router.push('/chat')}
         aria-label="Open AI assistant"
       >
-        <SiriOrb
-          size="48px"
-          animationDuration={20}
-          className="drop-shadow-2xl"
-          colors={{ c1: "oklch(65% 0.18 40)", c2: "oklch(55% 0.05 0)", c3: "oklch(72% 0.14 50)" }}
-        />
+        <div className="w-12 h-12 rounded-full bg-linear-to-br from-orange-500 via-orange-600 to-gray-900 shadow-[0_0_24px_rgba(245,87,2,0.5)] animate-pulse flex items-center justify-center">
+          <div className="w-5 h-5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30" />
+        </div>
       </button>
     </div>
   );

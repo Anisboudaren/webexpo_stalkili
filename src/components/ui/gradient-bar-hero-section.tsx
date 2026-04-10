@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Globe, Mail, X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Globe, Mail, X, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { SelectorChips } from '@/components/ui/selector-chips';
 
 type AvatarProps = { imageSrc: string; delay: number };
 
@@ -38,32 +39,111 @@ const TrustElements: React.FC = () => {
   );
 };
 
+const BROAD_FIELDS = ['Technology', 'Medicine & Health', 'Engineering', 'Natural Sciences', 'Social Sciences', 'Business', 'Arts & Humanities', 'Law & Policy'];
+
+const SPECIFIC_FIELDS: Record<string, string[]> = {
+  'Technology': ['AI / Machine Learning', 'Software Engineering', 'Quantum Computing', 'Cybersecurity', 'Data Science', 'Robotics', 'Blockchain', 'Computer Vision'],
+  'Medicine & Health': ['Med Tech', 'Neuroscience', 'Genomics', 'Public Health', 'Oncology', 'Biomedical Engineering', 'Psychiatry'],
+  'Engineering': ['Aerospace', 'Mechanical', 'Electrical', 'Civil', 'Chemical', 'Nuclear', 'Materials Science'],
+  'Natural Sciences': ['Physics', 'Climate Science', 'Astrophysics', 'Biology', 'Chemistry', 'Ecology', 'Mathematics'],
+  'Social Sciences': ['Psychology', 'Economics', 'Sociology', 'Political Science', 'Anthropology', 'Education'],
+  'Business': ['Finance', 'Entrepreneurship', 'Marketing', 'Supply Chain', 'Organisational Behaviour'],
+  'Arts & Humanities': ['Philosophy', 'Linguistics', 'History', 'Literature', 'Architecture', 'Film Studies'],
+  'Law & Policy': ['International Law', 'Tech Policy', 'Environmental Law', 'Human Rights', 'IP Law'],
+};
+
 const SupervisorSearch: React.FC = () => {
   const [query, setQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [broadSelected, setBroadSelected] = useState<string[]>([]);
+  const [specificSelected, setSpecificSelected] = useState<string[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const availableSpecific = broadSelected.flatMap((f) => SPECIFIC_FIELDS[f] ?? []);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!query.trim()) return;
-    router.push(`/chat?q=${encodeURIComponent(query.trim())}`);
+    const tags = [...broadSelected, ...specificSelected];
+    const fullQuery = [query.trim(), ...tags].filter(Boolean).join(', ');
+    if (!fullQuery) return;
+    router.push(`/chat?q=${encodeURIComponent(fullQuery)}`);
   };
 
+  const removeTag = (tag: string) => {
+    setBroadSelected((p) => p.filter((t) => t !== tag));
+    setSpecificSelected((p) => p.filter((t) => t !== tag));
+  };
+
+  const allTags = [...broadSelected, ...specificSelected];
+
   return (
-    <div className="relative z-10 w-full">
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search supervisors or research areas..."
-          className="flex-1 px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-gray-900/60 border border-gray-700 focus:border-white outline-none text-white text-sm sm:text-base shadow-[0_0_15px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-300"
-        />
-        <button
-          type="submit"
-          className="px-6 sm:px-8 py-3 sm:py-4 rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-sm sm:text-base bg-white hover:bg-gray-100 text-black"
-        >
-          Search
-        </button>
+    <div ref={containerRef} className="relative z-20 w-full">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {/* Selected tags */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-2">
+            {allTags.map((tag) => (
+              <span key={tag} className="inline-flex items-center gap-1 bg-orange-500/20 border border-orange-500/40 text-orange-300 text-xs px-3 py-1 rounded-full">
+                {tag}
+                <button type="button" onClick={() => removeTag(tag)} className="hover:text-white ml-0.5"><X size={10} /></button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Input row */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setShowDropdown(true)}
+              placeholder="Search supervisors or research areas..."
+              className="w-full px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-gray-900/60 border border-gray-700 focus:border-white outline-none text-white text-sm sm:text-base shadow-[0_0_15px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-300 pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowDropdown((p) => !p)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+            >
+              <ChevronDown size={18} className={`transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+          <button
+            type="submit"
+            className="px-6 sm:px-8 py-3 sm:py-4 rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-sm sm:text-base bg-white hover:bg-gray-100 text-black"
+          >
+            Search
+          </button>
+        </div>
+
+        {/* Dropdown */}
+        {showDropdown && (
+          <div className="absolute top-full mt-2 left-0 right-0 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col gap-5">
+            <div>
+              <p className="text-xs text-gray-600 uppercase tracking-widest mb-3">Broad Field</p>
+              <SelectorChips options={BROAD_FIELDS} selected={broadSelected} onChange={setBroadSelected} />
+            </div>
+            {availableSpecific.length > 0 && (
+              <div>
+                <p className="text-xs text-gray-600 uppercase tracking-widest mb-3">Specialisation</p>
+                <SelectorChips options={availableSpecific} selected={specificSelected} onChange={setSpecificSelected} />
+              </div>
+            )}
+          </div>
+        )}
       </form>
     </div>
   );
@@ -122,7 +202,7 @@ const GradientBars: React.FC = () => {
 export const Component: React.FC = () => {
   return (
     <section className="relative min-h-screen flex flex-col items-center px-6 sm:px-8 md:px-12 overflow-hidden rounded-bl-[4rem] rounded-br-[4rem]">
-      <div className="absolute inset-0 bg-gray-950"></div>
+      <div className="absolute inset-0 bg-black"></div>
       <GradientBars />
       <div className="relative z-10 text-center w-full max-w-4xl mx-auto flex flex-col items-center justify-center min-h-screen pt-28 pb-8 sm:pt-32 sm:pb-16">
         <div className="mb-6 sm:mb-8">
