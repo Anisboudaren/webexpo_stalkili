@@ -1,10 +1,17 @@
 import Groq from 'groq-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { text: 'GROQ_API_KEY is not configured.', error: 'MISSING_GROQ_API_KEY' },
+        { status: 503 }
+      );
+    }
+    const groq = new Groq({ apiKey });
+
     const { messages } = await req.json();
 
     const history = messages.map((m: { role: string; text: string }) => ({

@@ -1,15 +1,24 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, X, Check, Database } from 'lucide-react';
 import { PromptInputBox } from '@/components/ui/ai-prompt-box';
 import { SelectorChips } from '@/components/ui/selector-chips';
 import { ResearcherResults } from '@/components/ui/researcher-card';
+import type { Researcher } from '@/types/researcher';
 import { SiriOrb } from '@/components/ui/siri-orb';
 
-type Message = { role: 'user' | 'ai'; text: string; query?: string };
+type Message =
+  | { role: 'user'; text: string }
+  | {
+      role: 'ai';
+      text: string;
+      query: string;
+      researchers: Researcher[];
+      searchError?: string;
+    };
 
 const BROAD_FIELDS = ['Technology', 'Medicine & Health', 'Engineering', 'Natural Sciences', 'Social Sciences', 'Business', 'Arts & Humanities', 'Law & Policy'];
 const SPECIFIC_FIELDS: Record<string, string[]> = {
@@ -126,6 +135,7 @@ function FieldPicker({
 }
 
 function ChatContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -142,7 +152,7 @@ function ChatContent() {
     const q = searchParams?.get('q');
     if (q && !initialSent.current) {
       initialSent.current = true;
-      handleSend(q);
+      void handleSend(q);
     }
   }, [searchParams]);
 
@@ -173,7 +183,7 @@ function ChatContent() {
     });
   };
 
-  const handleSend = (message: string) => {
+  const handleSend = async (message: string) => {
     if (!message.trim()) return;
     setShowFieldPicker(false);
     const tags = [...broadSelected, ...specificSelected];
@@ -182,10 +192,46 @@ function ChatContent() {
     const full = parts.join(' | ');
     setMessages((prev) => [...prev, { role: 'user', text: full }]);
     setLoading(true);
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: 'ai', text: '', query: message.trim() }]);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(message.trim())}`);
+      const text = await res.text();
+      let data: { researchers?: Researcher[]; error?: string } = {};
+      try {
+        data = JSON.parse(text) as typeof data;
+      } catch {
+        throw new Error(
+          text.trimStart().startsWith('<')
+            ? 'Server returned HTML instead of JSON. Is the Next.js app running?'
+            : 'Invalid JSON from /api/search.'
+        );
+      }
+      if (!res.ok) {
+        throw new Error(typeof data.error === 'string' ? data.error : `Search failed (${res.status})`);
+      }
+      const researchers = Array.isArray(data.researchers) ? data.researchers : [];
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'ai',
+          text: '',
+          query: message.trim(),
+          researchers,
+        },
+      ]);
+    } catch (e) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'ai',
+          text: '',
+          query: message.trim(),
+          researchers: [],
+          searchError: e instanceof Error ? e.message : 'Search failed.',
+        },
+      ]);
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   const isEmpty = messages.length === 0;
@@ -238,7 +284,11 @@ function ChatContent() {
                     </div>
                   ) : (
                     <div className="w-full max-w-full">
-                      <ResearcherResults query={m.query ?? ''} />
+                      <ResearcherResults
+                        query={m.query}
+                        researchers={m.researchers}
+                        error={m.searchError ?? null}
+                      />
                     </div>
                   )}
                 </div>
@@ -291,7 +341,7 @@ function ChatContent() {
           {/* Prompt box with field + source buttons */}
           <div className="relative">
             <PromptInputBox
-              onSend={handleSend}
+              onSend={(msg) => void handleSend(msg)}
               isLoading={loading}
               placeholder={allTags.length > 0 ? `In: ${allTags.join(', ')}…` : 'Search a supervisor, recruiter, or topic…'}
             />

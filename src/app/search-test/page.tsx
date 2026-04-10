@@ -2,26 +2,24 @@
 
 import { useMemo, useState } from 'react';
 
-type NormalizedAuthor = {
-  name: string | null;
-  profileUrl: string | null;
-  affiliations: string | null;
-  citedBy: number | null;
-  thumbnail: string | null;
-  authorId: string | null;
-  topCitedBy: number | null;
-  serpapiAuthorLink: string | null;
-};
-
 type SearchResponse = {
   query: string;
-  authors: NormalizedAuthor[];
+  researchers: Array<{
+    id: string;
+    name: string;
+    title: string;
+    university: string;
+    location: string;
+    image: string;
+    topics: string[];
+    matchScore: number;
+    publications: number;
+    summary: string;
+  }>;
   meta: {
     source: string;
     total: number;
-    totalResults?: number | null;
-    queryDisplayed?: string;
-    advisorFitRoute?: string;
+    flaskBaseUrl?: string;
   };
 };
 
@@ -76,34 +74,36 @@ const defaultAdvisorFitRequest = {
 
 const defaultSearchMockResponse: SearchResponse = {
   query: 'Zakaria',
-  authors: [
+  researchers: [
     {
+      id: 'example1',
       name: 'Zakaria Chihab',
-      profileUrl: 'https://scholar.google.com/citations?user=example1',
-      affiliations: 'University of Example',
-      citedBy: 742,
-      thumbnail: 'https://via.placeholder.com/64',
-      authorId: 'example1',
-      topCitedBy: 742,
-      serpapiAuthorLink: 'https://serpapi.com/search.json?engine=google_scholar_author&author_id=example1',
+      title: 'University of Example',
+      university: 'University of Example',
+      location: '',
+      image: 'https://via.placeholder.com/64',
+      topics: ['Machine learning'],
+      matchScore: 82,
+      publications: 742,
+      summary: 'Example mock profile for UI testing.',
     },
     {
+      id: 'example2',
       name: 'Amina Zakaria',
-      profileUrl: 'https://scholar.google.com/citations?user=example2',
-      affiliations: 'Institute of Data Science',
-      citedBy: 319,
-      thumbnail: null,
-      authorId: 'example2',
-      topCitedBy: 319,
-      serpapiAuthorLink: null,
+      title: 'Institute of Data Science',
+      university: 'Institute of Data Science',
+      location: '',
+      image: '/images/professor-placeholder.svg',
+      topics: ['Data science', 'NLP'],
+      matchScore: 71,
+      publications: 319,
+      summary: 'Second mock researcher.',
     },
   ],
   meta: {
-    source: 'mock',
+    source: 'flask',
     total: 2,
-    totalResults: 2,
-    queryDisplayed: 'Zakaria',
-    advisorFitRoute: '/api/advisor-fit',
+    flaskBaseUrl: 'http://127.0.0.1:5000',
   },
 };
 
@@ -180,7 +180,7 @@ export default function SearchTestPage() {
 
   const formattedSearchResponse = useMemo(() => {
     const parsed = safeParse<SearchResponse>(JSON.stringify(lastResponse));
-    if (!parsed.data || !Array.isArray(parsed.data.authors)) {
+    if (!parsed.data || !Array.isArray(parsed.data.researchers)) {
       return null;
     }
     return parsed.data;
@@ -250,11 +250,12 @@ export default function SearchTestPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
             });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: unknown };
       setLastResponse(data);
 
       if (!res.ok) {
-        throw new Error(data?.error ?? `Request failed with status ${res.status}`);
+        const msg = typeof data.error === 'string' ? data.error : `Request failed with status ${res.status}`;
+        throw new Error(msg);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -359,30 +360,16 @@ export default function SearchTestPage() {
 
         <section className="mt-6 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <h3 className="mb-4 font-medium">Received Data (Formatted)</h3>
-          {mode === 'search' && formattedSearchResponse?.authors?.length ? (
+          {mode === 'search' && formattedSearchResponse?.researchers?.length ? (
             <div className="grid gap-3 md:grid-cols-2">
-              {formattedSearchResponse.authors.map((author, idx) => (
-                <article key={`${author.authorId ?? 'author'}-${idx}`} className="rounded-lg border border-slate-700 bg-slate-950 p-3">
-                  <p className="font-medium">{author.name ?? 'Unknown author'}</p>
-                  <p className="mt-1 text-sm text-slate-300">
-                    {author.affiliations ?? 'No affiliation provided'}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-300">
-                    Cited by: {author.citedBy ?? 'N/A'}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-300">
-                    Author ID: {author.authorId ?? 'N/A'}
-                  </p>
-                  {author.profileUrl ? (
-                    <a
-                      href={author.profileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-2 inline-block text-sm text-indigo-300 underline"
-                    >
-                      Open profile
-                    </a>
-                  ) : null}
+              {formattedSearchResponse.researchers.map((r, idx) => (
+                <article key={`${r.id}-${idx}`} className="rounded-lg border border-slate-700 bg-slate-950 p-3">
+                  <p className="font-medium">{r.name}</p>
+                  <p className="mt-1 text-sm text-slate-300">{r.title}</p>
+                  <p className="mt-1 text-sm text-slate-300">Match score: {r.matchScore}</p>
+                  <p className="mt-1 text-sm text-slate-300">Publications (citations proxy): {r.publications}</p>
+                  <p className="mt-1 text-xs text-slate-400 line-clamp-3">{r.summary}</p>
+                  <p className="mt-1 text-xs text-slate-500">Topics: {r.topics.join(', ')}</p>
                 </article>
               ))}
             </div>

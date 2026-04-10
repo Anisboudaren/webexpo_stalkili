@@ -3,19 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { BookOpen, MapPin } from 'lucide-react';
+import type { Researcher } from '@/types/researcher';
 
-export interface Researcher {
-  id: string; // ← added required id field
-  name: string;
-  title: string;
-  university: string;
-  location: string;
-  image: string;
-  topics: string[];
-  matchScore: number;
-  publications: number;
-  summary: string;
-}
+export type { Researcher };
 
 export const MOCK_RESEARCHERS: Researcher[] = [
   {
@@ -139,9 +129,12 @@ function ResearcherCard({ researcher, index }: ResearcherCardProps) {
 
 interface ResearcherResultsProps {
   query: string;
+  /** From GET /api/search (Flask-backed). Empty array means no hits. */
+  researchers: Researcher[];
+  error?: string | null;
 }
 
-export function ResearcherResults({ query }: ResearcherResultsProps) {
+export function ResearcherResults({ query, researchers, error }: ResearcherResultsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -151,13 +144,22 @@ export function ResearcherResults({ query }: ResearcherResultsProps) {
     >
       <p className="text-gray-300 text-sm leading-relaxed">
         Here is a list of researchers matching{' '}
-        <span className="text-orange-400 font-medium">"{query}"</span> — ranked by compatibility:
+        <span className="text-orange-400 font-medium">"{query}"</span>
+        {error ? '.' : ' — ranked by compatibility:'}
       </p>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        {MOCK_RESEARCHERS.map((r, i) => (
-          <ResearcherCard key={r.id} researcher={r} index={i} /> // ← key uses stable id
-        ))}
-      </div>
+      {error ? (
+        <p className="text-sm text-red-400">{error}</p>
+      ) : null}
+      {!error && researchers.length === 0 ? (
+        <p className="text-sm text-gray-500">No candidates found for this query.</p>
+      ) : null}
+      {!error && researchers.length > 0 ? (
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {researchers.map((r, i) => (
+            <ResearcherCard key={r.id} researcher={r} index={i} />
+          ))}
+        </div>
+      ) : null}
     </motion.div>
   );
 }

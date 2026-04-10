@@ -7,7 +7,7 @@ import { ArrowLeft, MapPin, BookOpen, Quote, ExternalLink } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Researcher } from '@/components/ui/researcher-card';
+import type { Researcher } from '@/types/researcher';
 
 // Mock publication snippets keyed by researcher id
 const PUBLICATIONS: Record<string, { title: string; journal: string; year: number; citations: number; abstract: string }[]> = {
@@ -95,7 +95,10 @@ const matchConfig = (score: number) => {
 };
 
 export default function ProfilePage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const rawId = params?.id;
+  const id =
+    typeof rawId === 'string' ? rawId : Array.isArray(rawId) ? (rawId[0] ?? '') : '';
   const router = useRouter();
   const [researcher, setResearcher] = useState<Researcher | null>(null);
 
