@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Globe, Mail, X } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type AvatarProps = { imageSrc: string; delay: number };
 
@@ -39,11 +40,12 @@ const TrustElements: React.FC = () => {
 
 const SupervisorSearch: React.FC = () => {
   const [query, setQuery] = useState('');
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!query.trim()) return;
-    // TODO: wire up to search/analysis flow
+    router.push(`/chat?q=${encodeURIComponent(query.trim())}`);
   };
 
   return (

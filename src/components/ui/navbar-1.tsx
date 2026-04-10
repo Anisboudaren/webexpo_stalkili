@@ -35,7 +35,7 @@ const Navbar1 = () => {
               </defs>
             </svg>
           </motion.div>
-          <span className="text-white font-bold text-base tracking-tight">Scopeout</span>
+          <span className="text-white font-semibold text-base tracking-tight">stalkili</span>
         </div>
 
         {/* Desktop Navigation */}
