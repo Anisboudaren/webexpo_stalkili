@@ -6,10 +6,59 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, X, Check, Database } from 'lucide-react';
 import { PromptInputBox } from '@/components/ui/ai-prompt-box';
 import { SelectorChips } from '@/components/ui/selector-chips';
+<<<<<<< HEAD
 import { ResearcherResults } from '@/components/ui/researcher-card';
 import { SiriOrb } from '@/components/ui/siri-orb';
+=======
+import { ResearcherResults, type ScholarAuthor } from '@/components/ui/researcher-card';
+>>>>>>> amir
 
-type Message = { role: 'user' | 'ai'; text: string; query?: string };
+type AdvisorFitResponse = {
+  authorId: string;
+  studentInterests: string[];
+  papers: Array<{
+    title: string | null;
+    year: number | null;
+    citedByTotal: number | null;
+  }>;
+  researchFields: Array<{
+    field: string;
+    confidence: number;
+  }>;
+  fit: {
+    fitScore: number;
+    fitLevel: 'low' | 'medium' | 'high';
+    scoreBreakdown: Array<{
+      metric: string;
+      score: number;
+      reason: string;
+    }>;
+    pros: string[];
+    risks: string[];
+    nextQuestions: string[];
+  };
+  authorSummary?: {
+    name: string | null;
+    affiliations: string | null;
+    email: string | null;
+    imageUrl: string;
+    interests: string[];
+    totalCitations: number | null;
+    hIndexAll: number | null;
+    i10IndexAll: number | null;
+  };
+};
+
+type Message = {
+  id: string;
+  role: 'user' | 'ai';
+  text: string;
+  query?: string;
+  type?: 'text' | 'search-results' | 'fit-details';
+  authors?: ScholarAuthor[];
+  error?: string | null;
+  fitData?: AdvisorFitResponse;
+};
 
 const BROAD_FIELDS = ['Technology', 'Medicine & Health', 'Engineering', 'Natural Sciences', 'Social Sciences', 'Business', 'Arts & Humanities', 'Law & Policy'];
 const SPECIFIC_FIELDS: Record<string, string[]> = {
@@ -138,11 +187,25 @@ function ChatContent() {
   const initialSent = useRef(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
+  const inferStudentInterests = (query: string) => {
+    const selected = [...broadSelected, ...specificSelected]
+      .map((item) => item.toLowerCase().trim())
+      .filter(Boolean);
+    if (selected.length > 0) {
+      return selected;
+    }
+    return query
+      .split(/[,\s/|]+/)
+      .map((token) => token.trim().toLowerCase())
+      .filter((token) => token.length > 2)
+      .slice(0, 6);
+  };
+
   useEffect(() => {
     const q = searchParams?.get('q');
     if (q && !initialSent.current) {
       initialSent.current = true;
-      handleSend(q);
+      void handleSend(q);
     }
   }, [searchParams]);
 
@@ -173,19 +236,117 @@ function ChatContent() {
     });
   };
 
-  const handleSend = (message: string) => {
+  const handleSend = async (message: string) => {
     if (!message.trim()) return;
     setShowFieldPicker(false);
     const tags = [...broadSelected, ...specificSelected];
     const sources = activeSources.includes('all') ? [] : activeSources.map((s) => SOURCES.find((x) => x.id === s)?.label ?? s);
     const parts = [message.trim(), ...(tags.length ? [`Fields: ${tags.join(', ')}`] : []), ...(sources.length ? [`Sources: ${sources.join(', ')}`] : [])];
     const full = parts.join(' | ');
-    setMessages((prev) => [...prev, { role: 'user', text: full }]);
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      text: full,
+      type: 'text',
+    };
+    setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: 'ai', text: '', query: message.trim() }]);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(message.trim())}`);
+      const data = (await res.json()) as {
+        authors?: ScholarAuthor[];
+        error?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data?.error ?? `Search failed with status ${res.status}`);
+      }
+      const aiResultMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'ai',
+        text: '',
+        query: message.trim(),
+        type: 'search-results',
+        authors: Array.isArray(data.authors) ? data.authors : [],
+      };
+      setMessages((prev) => [...prev, aiResultMessage]);
+    } catch (error) {
+      const aiErrorMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'ai',
+        text: error instanceof Error ? error.message : 'Search failed.',
+        type: 'text',
+        error: error instanceof Error ? error.message : 'Search failed.',
+      };
+      setMessages((prev) => [...prev, aiErrorMessage]);
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
+  };
+
+  const handleSelectAuthor = async (author: ScholarAuthor, query: string) => {
+    if (!author.authorId) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'ai',
+          text: `Cannot analyze "${author.name ?? 'this professor'}" because author ID is missing.`,
+          type: 'text',
+        },
+      ]);
+      return;
+    }
+
+    setLoading(true);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: 'ai',
+        text: `Analyzing fit for ${author.name ?? 'selected professor'}...`,
+        type: 'text',
+      },
+    ]);
+
+    try {
+      const payload = {
+        authorId: author.authorId,
+        studentInterests: inferStudentInterests(query),
+        targetYearRange: { from: 2020, to: new Date().getFullYear() },
+      };
+      const res = await fetch('/api/advisor-fit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json()) as AdvisorFitResponse & { error?: string };
+      if (!res.ok) {
+        throw new Error(data?.error ?? `Advisor fit failed with status ${res.status}`);
+      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'ai',
+          text: '',
+          type: 'fit-details',
+          fitData: data,
+          query,
+        },
+      ]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'ai',
+          text: error instanceof Error ? error.message : 'Failed to analyze advisor fit.',
+          type: 'text',
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isEmpty = messages.length === 0;
@@ -223,15 +384,85 @@ function ChatContent() {
         <div className="max-w-3xl w-full mx-auto px-4">
           {isEmpty ? null : (
             <div className="flex flex-col gap-6 py-6">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {messages.map((m) => (
+                <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {m.role === 'user' ? (
                     <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-white text-black">
                       {m.text}
                     </div>
                   ) : (
                     <div className="w-full max-w-full">
-                      <ResearcherResults query={m.query ?? ''} />
+                      {m.type === 'search-results' ? (
+                        <ResearcherResults
+                          query={m.query ?? ''}
+                          authors={m.authors ?? []}
+                          error={m.error ?? null}
+                          onSelectAuthor={(author) => void handleSelectAuthor(author, m.query ?? '')}
+                        />
+                      ) : m.type === 'fit-details' && m.fitData ? (
+                        <div className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-gray-200">
+                          <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3">
+                            <div>
+                              <p className="text-xs text-gray-400">Selected advisor</p>
+                              <p className="text-base font-semibold text-white">
+                                {m.fitData.authorSummary?.name ?? m.fitData.authorId}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {m.fitData.authorSummary?.affiliations ?? 'Affiliation unavailable'}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-400">Fit score</p>
+                              <p className="text-2xl font-bold text-orange-400">{m.fitData.fit.fitScore}</p>
+                              <p className="text-xs uppercase tracking-wide text-gray-400">{m.fitData.fit.fitLevel}</p>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid gap-3 md:grid-cols-2">
+                            <div>
+                              <p className="text-xs text-gray-400 mb-1">Research fields</p>
+                              <div className="flex flex-wrap gap-1">
+                                {m.fitData.researchFields.slice(0, 6).map((field) => (
+                                  <span key={field.field} className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
+                                    {field.field} ({Math.round(field.confidence * 100)}%)
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-400 mb-1">Top papers</p>
+                              <div className="space-y-1">
+                                {m.fitData.papers.slice(0, 3).map((paper, index) => (
+                                  <p key={`${paper.title ?? 'paper'}-${index}`} className="text-xs text-gray-300">
+                                    {paper.title ?? 'Untitled paper'} {paper.year ? `(${paper.year})` : ''}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid gap-3 md:grid-cols-2">
+                            <div>
+                              <p className="text-xs text-emerald-300 mb-1">Pros</p>
+                              <ul className="space-y-1 text-xs text-gray-300">
+                                {m.fitData.fit.pros.slice(0, 3).map((item) => (
+                                  <li key={item}>- {item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div>
+                              <p className="text-xs text-red-300 mb-1">Risks</p>
+                              <ul className="space-y-1 text-xs text-gray-300">
+                                {m.fitData.fit.risks.slice(0, 3).map((item) => (
+                                  <li key={item}>- {item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed bg-white/5 border border-white/10 text-gray-200">
+                          {m.text}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
