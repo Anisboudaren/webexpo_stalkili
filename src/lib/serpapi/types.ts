@@ -2,8 +2,11 @@ export type NormalizedAuthor = {
   name: string | null;
   profileUrl: string | null;
   affiliations: string | null;
+  email: string | null;
+  interests: string[];
   citedBy: number | null;
   thumbnail: string | null;
+  imageUrl: string;
   authorId: string | null;
   topCitedBy: number | null;
   serpapiAuthorLink: string | null;
@@ -13,6 +16,8 @@ export type ScholarAuthorRaw = {
   name?: unknown;
   link?: unknown;
   affiliations?: unknown;
+  email?: unknown;
+  interests?: unknown;
   cited_by?: unknown;
   thumbnail?: unknown;
   author_id?: unknown;
@@ -20,13 +25,24 @@ export type ScholarAuthorRaw = {
 };
 
 export type ScholarSearchRawResponse = {
+  search_parameters?: {
+    author_id?: unknown;
+  };
   profiles?: {
     authors?: unknown;
   };
   organic_results?: unknown;
   articles?: unknown;
   author?: {
+    name?: unknown;
+    affiliations?: unknown;
+    email?: unknown;
+    thumbnail?: unknown;
     interests?: unknown;
+  };
+  cited_by?: {
+    table?: unknown;
+    graph?: unknown;
   };
   related_searches?: unknown;
   search_information?: {
@@ -89,4 +105,16 @@ export type AdvisorFitResult = {
   pros: string[];
   risks: string[];
   nextQuestions: string[];
+};
+
+export type AdvisorAuthorSummary = {
+  name: string | null;
+  affiliations: string | null;
+  email: string | null;
+  thumbnail: string | null;
+  imageUrl: string;
+  interests: string[];
+  totalCitations: number | null;
+  hIndexAll: number | null;
+  i10IndexAll: number | null;
 };
