@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { readJsonResponse } from '@/lib/readJsonResponse';
 
 type NormalizedAuthor = {
   name: string | null;
@@ -250,11 +251,13 @@ export default function SearchTestPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
             });
-      const data = await res.json();
+      const data = await readJsonResponse<Record<string, unknown>>(res);
       setLastResponse(data);
 
       if (!res.ok) {
-        throw new Error(data?.error ?? `Request failed with status ${res.status}`);
+        const errMsg =
+          typeof data.error === 'string' ? data.error : `Request failed with status ${res.status}`;
+        throw new Error(errMsg);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');

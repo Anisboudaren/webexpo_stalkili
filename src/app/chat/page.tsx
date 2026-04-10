@@ -7,6 +7,7 @@ import { Layers, X, Check, Database } from 'lucide-react';
 import { PromptInputBox } from '@/components/ui/ai-prompt-box';
 import { SelectorChips } from '@/components/ui/selector-chips';
 import { ResearcherResults, type ScholarAuthor } from '@/components/ui/researcher-card';
+import { readJsonResponse } from '@/lib/readJsonResponse';
 
 type AdvisorFitResponse = {
   authorId: string;
@@ -248,10 +249,10 @@ function ChatContent() {
     setLoading(true);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(message.trim())}`);
-      const data = (await res.json()) as {
+      const data = await readJsonResponse<{
         authors?: ScholarAuthor[];
         error?: string;
-      };
+      }>(res);
       if (!res.ok) {
         throw new Error(data?.error ?? `Search failed with status ${res.status}`);
       }
@@ -314,7 +315,7 @@ function ChatContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = (await res.json()) as AdvisorFitResponse & { error?: string };
+      const data = await readJsonResponse<AdvisorFitResponse & { error?: string }>(res);
       if (!res.ok) {
         throw new Error(data?.error ?? `Advisor fit failed with status ${res.status}`);
       }
